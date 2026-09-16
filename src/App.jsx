@@ -19,36 +19,7 @@ const C = {
   warnBg: "#F6E4DC",
 };
 
-/* ---------- Default data ---------- */
-const DEFAULT_INGREDIENTS = [
-  { id: "mamona", name: "Óleo de mamona rícino", unit: "ml", stock: 0, avgCost: 0, purchases: [] },
-  { id: "coco", name: "Óleo de coco extra virgem", unit: "ml", stock: 0, avgCost: 0, purchases: [] },
-  { id: "abacate", name: "Óleo vegetal de abacate", unit: "ml", stock: 0, avgCost: 0, purchases: [] },
-  { id: "vitaminaE", name: "Vitamina E", unit: "ml", stock: 0, avgCost: 0, purchases: [] },
-  { id: "alecrim", name: "Óleo essencial de Alecrim", unit: "ml", stock: 0, avgCost: 0, purchases: [] },
-  { id: "essencia", name: "Essência cosmética", unit: "ml", stock: 0, avgCost: 0, purchases: [] },
-  { id: "agua", name: "Água desmineralizada", unit: "ml", stock: 0, avgCost: 0, purchases: [] },
-  { id: "glicerina", name: "Glicerina bidestilada", unit: "g", stock: 0, avgCost: 0, purchases: [] },
-  { id: "aloevera", name: "Extrato glicólico Aloe vera/babosa", unit: "ml", stock: 0, avgCost: 0, purchases: [] },
-  { id: "alcool", name: "Álcool de cereais", unit: "ml", stock: 0, avgCost: 0, purchases: [] },
-  { id: "jaborandi", name: "Extrato glicólico Jaborandi", unit: "ml", stock: 0, avgCost: 0, purchases: [] },
-  { id: "basecapilar", name: "Base capilar", unit: "g", stock: 0, avgCost: 0, purchases: [] },
-  { id: "corante", name: "Corante cosmético", unit: "ml", stock: 0, avgCost: 0, purchases: [] },
-];
-
-const DEFAULT_PRODUCTS = [
-  { id: "oleo", sigla: "OLE", linha: "Cuidados Capilares", name: "Óleo Regenerador", unitLabel: "30ml", unitSize: 30, unitType: "ml", totalYield: 27.5,
-    items: [{ ing: "coco", amt: 12 }, { ing: "mamona", amt: 8 }, { ing: "abacate", amt: 3 }, { ing: "vitaminaE", amt: 1 }, { ing: "alecrim", amt: 0.5 }, { ing: "essencia", amt: 3 }] },
-  { id: "creme", sigla: "CRE", linha: "Cuidados Capilares", name: "Creme de Pentear", unitLabel: "300g", unitSize: 300, unitType: "g", totalYield: 605,
-    items: [{ ing: "basecapilar", amt: 150 }, { ing: "agua", amt: 400 }, { ing: "essencia", amt: 5 }, { ing: "glicerina", amt: 20 }, { ing: "aloevera", amt: 20 }, { ing: "coco", amt: 10 }] },
-  { id: "tonico", sigla: "TON", linha: "Cuidados Capilares", name: "Tônico Capilar", unitLabel: "100ml", unitSize: 100, unitType: "ml", totalYield: 312,
-    items: [{ ing: "alcool", amt: 150 }, { ing: "jaborandi", amt: 100 }, { ing: "alecrim", amt: 2 }, { ing: "essencia", amt: 10 }, { ing: "agua", amt: 50 }] },
-  { id: "perfume", sigla: "PER", linha: "Cuidados Capilares", name: "Perfume Capilar", unitLabel: "200ml", unitSize: 200, unitType: "ml", totalYield: 200,
-    items: [{ ing: "alcool", amt: 168 }, { ing: "essencia", amt: 16 }, { ing: "agua", amt: 12 }, { ing: "glicerina", amt: 4 }, { ing: "corante", amt: 2 }] },
-];
-
-const DEFAULT_PRICES = Object.fromEntries(DEFAULT_PRODUCTS.map((p) => [p.id, 0]));
-const DEFAULT_PACKAGING = Object.fromEntries(DEFAULT_PRODUCTS.map((p) => [p.id, { frasco: 0, rotulo: 0 }]));
+/* ---------- Config ---------- */
 const PARTNER_TYPES = ["Loja física", "Salão de beleza", "Revendedor(a)", "Distribuidor", "Outro"];
 
 /* ---------- Helpers ---------- */
@@ -167,12 +138,12 @@ function Empty({ children }) {
 export default function App() {
   const [tab, setTab] = useState("dashboard");
   const [loaded, setLoaded] = useState(false);
-  const [ingredients, setIngredients] = useState(DEFAULT_INGREDIENTS);
-  const [products, setProducts] = useState(DEFAULT_PRODUCTS);
+  const [ingredients, setIngredients] = useState([]);
+  const [products, setProducts] = useState([]);
   const [lotes, setLotes] = useState([]);
   const [partners, setPartners] = useState([]);
-  const [prices, setPrices] = useState(DEFAULT_PRICES);
-  const [packaging, setPackaging] = useState(DEFAULT_PACKAGING);
+  const [prices, setPrices] = useState({});
+  const [packaging, setPackaging] = useState({});
   const [sales, setSales] = useState([]);
   const [pin, setPin] = useState(undefined); // undefined = loading, null = not set yet
   const [unlocked, setUnlocked] = useState(false);
@@ -181,21 +152,10 @@ export default function App() {
     (async () => {
       if (!supabaseConfigured) { setPin(localGet("kemia_pin", null)); setLoaded(true); return; }
       const data = await loadAllFromSupabase();
-      const isFresh = data.ingredients.length === 0 && data.products.length === 0;
-      if (isFresh) {
-        setIngredients(DEFAULT_INGREDIENTS);
-        setProducts(DEFAULT_PRODUCTS);
-        setPrices(DEFAULT_PRICES);
-        setPackaging(DEFAULT_PACKAGING);
-        await upsert("ingredients", DEFAULT_INGREDIENTS.map(ingredientRow));
-        await upsert("products", DEFAULT_PRODUCTS.map((p) => productRow(p, DEFAULT_PRICES, DEFAULT_PACKAGING)));
-        await upsert("product_items", DEFAULT_PRODUCTS.flatMap(itemRowsFor));
-      } else {
-        setIngredients(data.ingredients);
-        setProducts(data.products);
-        setPrices(data.prices);
-        setPackaging(data.packaging);
-      }
+      setIngredients(data.ingredients);
+      setProducts(data.products);
+      setPrices(data.prices);
+      setPackaging(data.packaging);
       setLotes(data.lotes);
       setPartners(data.partners);
       setSales(data.sales);
